@@ -31,6 +31,13 @@ stripe
           {{ scope.row.status === 1 ? '可用' : '不可用' }}
 </template>
 </el-table-column>
+<el-table-column label="操作" width="280" align="center">
+   <template slot-scope="scope">
+      <el-button type="danger" size="mini" 
+         icon="el-icon-delete" @click="removeDataById(scope.row.id)"> </el-button>
+   </template>
+</el-table-column>
+
 </el-table>
 
 <!-- 分页 -->
@@ -85,7 +92,28 @@ export default ({
         .catch(error=>{
           console.log(error)
         })//请求失败
+    },
+    // 删除医院现实
+    removeDataById(id) {
+      this.$confirm('此操作将永久删除医院是设置信息, 是否继续?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+          }).then(() => { //确定执行then方法
+        //调用接口
+        hospset.deleteHospSet(id)
+          .then(response => {
+              //提示
+              this.$message({
+                type: 'success',
+                message: '删除成功!'
+              })
+              //刷新页面
+              this.getList(1)
+          })
+       })
     }
+
   }
   
 })

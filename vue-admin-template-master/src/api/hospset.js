@@ -12,5 +12,12 @@ export default {
             data:searchObj
         })
         // z=直接回调
+    },
+    deleteHospSet(id){
+        return request ({
+            url: `/admin/hosp/hospitalSet/${id}`,
+            method: 'delete'
+          })
+        
     }
 }
