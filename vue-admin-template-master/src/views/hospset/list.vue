@@ -13,12 +13,23 @@
    <el-button type="primary" icon="el-icon-search" @click="getList()">查询</el-button>
 </el-form>
 
+<!-- 批量删除 -->
+<!-- 工具条 -->
+<!-- 批量删除fail -->
+<!-- <div>
+   <el-button type="danger" size="mini" @click="removeRows()">批量删除</el-button>
+</div> -->
+
 
   <!-- banner列表 -->
 <el-table
 :data="list"
 stripe
       style="width: 100%">
+      <!-- 复选框 -->
+      <!-- <el-table:data="list" stripe style="width: 100%"  @selection-change="handleChange">
+   <el-table-column type="selection" width="55"/> -->
+
 
 <el-table-column type="index" width="50"/>
 <el-table-column prop="hosname" label="医院名称"/>
@@ -35,6 +46,15 @@ stripe
    <template slot-scope="scope">
       <el-button type="danger" size="mini" 
          icon="el-icon-delete" @click="removeDataById(scope.row.id)"> </el-button>
+         <el-button v-if="scope.row.status==1" type="primary" size="mini" 
+         icon="el-icon-delete" @click="lockHostSet(scope.row.id,0)">锁定</el-button>
+      <el-button v-if="scope.row.status==0" type="danger" size="mini" 
+         icon="el-icon-delete" @click="lockHostSet(scope.row.id,1)">取消锁定</el-button>
+         <router-link :to="'/hospset/edit/'+scope.row.id">
+   <el-button type="primary" size="mini" icon="el-icon-edit"></el-button>
+</router-link>
+
+
    </template>
 </el-table-column>
 
@@ -63,10 +83,11 @@ export default ({
   data(){
     return{
     current:1,
-    limit:1,
+    limit:2,
     searchObj:{},
     list:[],
-    total:-1
+    total:-1,
+    multipleSelection: [] 
     }
   },
   created(){
@@ -77,6 +98,16 @@ export default ({
 
   },
   methods:{
+    
+    //锁定和取消锁定
+    lockHostSet(id,status) {
+    hospset.lockHospSet(id,status)
+        .then(response => {
+          //刷新
+          this.getList()
+        })
+    },
+
     getList(page=1){
       // 默认是第一页，传入page的数值，就查几
       this.current=page
@@ -92,6 +123,11 @@ export default ({
         .catch(error=>{
           console.log(error)
         })//请求失败
+    },
+    // 当表格复选框选项发生变化的时候触发
+    handleChange(selection) {
+      console.log(selection)
+      this.multipleSelection = selection
     },
     // 删除医院现实
     removeDataById(id) {
@@ -112,7 +148,35 @@ export default ({
               this.getList(1)
           })
        })
-    }
+    },
+    //批量删除
+removeRows() {
+   this.$confirm('此操作将永久删除医院是设置信息, 是否继续?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+   }).then(() => { //确定执行then方法
+      var idList = []
+      //遍历数组得到每个id值，设置到idList里面
+      for(var i=0;i<this.multipleSelection.length;i++) {
+         var obj = this.multipleSelection[i]
+         var id = obj.id
+         idList.push(id)
+      }
+      //调用接口
+      hospset.batchHospSet(idList)
+         .then(response => {
+            //提示
+            this.$message({
+               type: 'success',
+               message: '删除成功!'
+            })
+            //刷新页面
+            this.getList(1)
+         })
+   })
+}
+
 
   }
   
